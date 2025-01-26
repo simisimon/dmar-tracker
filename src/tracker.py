@@ -60,11 +60,14 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+    # for some reason it was not working in the automatic loading on the start, therefore it was added here manually
+    # should be removed in the near future when the automatic loading is fixed
     await bot.load_extension('cogs.periodic_tasks')
     print("Manually loaded periodic_tasks cog")
 
 # Load cogs dynamically
 @bot.command(name="load")
+# commented out the check for the owner, since I am not the owner :sadge:
 #@commands.is_owner()
 async def load_cog(ctx, extension):
     try:
@@ -75,6 +78,7 @@ async def load_cog(ctx, extension):
 
 
 @bot.command(name="unload")
+# commented out the check for the owner, since I am not the owner :sadge:
 #@commands.is_owner()
 async def unload_cog(ctx, extension):
     try:

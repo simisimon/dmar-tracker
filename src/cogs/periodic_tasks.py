@@ -9,10 +9,13 @@ class PeriodicTasks(commands.Cog):
         self.bot = bot
         self.tasks = {}  # Dictionary to track running tasks by name
 
+    # simple "Hi" command, mostly used for debugging
     @commands.command(name="hi")
     async def say_hi(self, ctx):
         await ctx.send(f"Moin Meister!")        
 
+    # gp command, used to get the current price of a cryptocurrency
+    # Usage: !gp <name of the coin>
     @commands.command(name="gp")
     async def get_price(self, ctx, coin_name: str = None):
         if not coin_name:
@@ -26,7 +29,8 @@ class PeriodicTasks(commands.Cog):
             await ctx.send(f"Could not retrieve the price for {coin_name}.")
 
 
-
+    # gpp command, used to add an automatic task that fetches the price of the given cryptocurrency every 10 seconds
+    # Usage: !gpp <name of the coin>
     @commands.command(name="gpp")
     async def get_price_periodically(self, ctx, coin_name: str = None):
         if not coin_name:
@@ -39,7 +43,7 @@ class PeriodicTasks(commands.Cog):
         
         self.tasks[coin_name] = self.bot.loop.create_task(self.get_crypto_price_periodically(ctx, coin_name))
 
-
+    # helper function used for the gpp command
     async def get_crypto_price_periodically(self, ctx, coin_name: str):
         try:
             while True:
@@ -52,7 +56,8 @@ class PeriodicTasks(commands.Cog):
         finally:
             self.tasks.pop(coin_name, None)
 
-
+    # stop command, used to stop the automatic task for a given cryptocurrency
+    # Usage: !stop <name of the coin>
     @commands.command(name="stop")
     async def stop_task(self, ctx, coin_name: str = None):
         if coin_name not in self.tasks:
@@ -61,19 +66,17 @@ class PeriodicTasks(commands.Cog):
             self.tasks[coin_name].cancel()
             await ctx.send("Stopping the periodic task for {coin_name}.")
 
-
+    # list command, used to list all cryptocurrencies for which automatic tasks are running
+    # Usage: !list
     @commands.command(name="list")
     async def list_tasks(self, ctx):
-        """
-        Lists all currently running tasks.
-        Usage: !list
-        """
         if not self.tasks:
             await ctx.send("No tasks are currently running.")
         else:
             task_list = "\n".join(self.tasks.keys())
             await ctx.send(f"Currently running tasks:\n{task_list}")
 
+    # helper function used for the gp command
     def get_crypto_price(self, coin_name: str):
         url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin_name}USDT"
         print(url)
