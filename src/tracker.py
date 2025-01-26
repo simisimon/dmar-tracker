@@ -20,7 +20,9 @@ bot_intents = discord.Intents.all()
 #bot_intents.messages = True
 
 bot = commands.Bot(command_prefix='!', intents=bot_intents)
-task_running = False
+
+# Track all tasks in an array
+tasks = {}
 
 #client = discord.Client(intents=intents)
 
@@ -87,42 +89,55 @@ async def get_price(ctx, coin_name: str = None):
         await ctx.send(f"Could not retrieve the price for {coin_name}.")
 
 
+
 @bot.command(name="gpp")
 async def get_price_periodically(ctx, coin_name: str = None):
-    global task_running
+    global tasks
     if not coin_name:
         await ctx.send("Please provide a cryptocurrency name. Usage: `!gpp <coin_name>`")
         return
     
-    if not task_running:
-        task_running = True
-        bot.loop.create_task(get_crypto_price_periodically(ctx, coin_name))
-    else:
-        await ctx.send("Task is already running dude")
+    if coin_name in tasks:
+        ctx.send(f"There is already a task running for {coin_name}")
+        return
+    
+    tasks[coin_name] = bot.loop.create_task(get_crypto_price_periodically(ctx, coin_name))
 
 
 async def get_crypto_price_periodically(ctx, coin_name: str):
-    global task_running
-
     try:
-        while task_running:
+        while True:
             current_price = get_crypto_price(coin_name=coin_name)
             await ctx.send(f"The current price of {coin_name} is ${current_price}.")
             await asyncio.sleep(10)
     except asyncio.CancelledError:
-        pass
+        await ctx.send(f"Task for {coin_name} has been stopped due to problems.")
+        raise
     finally:
-        task_running = False
+        tasks.pop(coin_name, None)
 
 
 @bot.command(name="stop")
-async def stop_task(ctx):
-    global task_running
-    if task_running:
-        task_running = False
-        await ctx.send("Stopping the periodic task!")
-    else:
+async def stop_task(ctx, coin_name: str = None):
+    global tasks
+    if coin_name not in tasks:
         await ctx.send("The periodic task is not running you idiot!")
+    else:
+        tasks[coin_name].cancel()
+        await ctx.send("Stopping the periodic task for {coin_name}.")
+
+
+@bot.command(name="list")
+async def list_tasks(ctx):
+    """
+    Lists all currently running tasks.
+    Usage: !list
+    """
+    if not tasks:
+        await ctx.send("No tasks are currently running.")
+    else:
+        task_list = "\n".join(tasks.keys())
+        await ctx.send(f"Currently running tasks:\n{task_list}")
             
 
 
