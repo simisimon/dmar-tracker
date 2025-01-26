@@ -1,12 +1,11 @@
 import os
 import discord
+from discord.ext import commands
 import requests
-import helperFunctions
-import threading
-import asyncio
 
 from dotenv import load_dotenv
 from discord.ext import commands
+from cogs.periodic_tasks import PeriodicTasks
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -21,16 +20,10 @@ bot_intents = discord.Intents.all()
 
 bot = commands.Bot(command_prefix='!', intents=bot_intents)
 
-# Track all tasks in an array
+# Track all tasks in a dictionary
 tasks = {}
 
 #client = discord.Client(intents=intents)
-
-def get_crypto_price(coin_name: str):
-    url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin_name}USDT"
-    print(url)
-    response = requests.get(url).json()
-    return float(response["price"])
 
 '''
 @client.event
@@ -61,84 +54,46 @@ async def on_message(message):
        await message.channel.send(f"current price of {coin_name} is {btc_price}$")
 '''
 
+# Load the PeriodicTasks cog
+#bot.add_cog(PeriodicTasks(bot))
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+    await bot.load_extension('cogs.periodic_tasks')
+    print("Manually loaded periodic_tasks cog")
 
-
-@bot.command(name="hi")
-async def say_hi(ctx):
-    threading.Thread(target=say_hi, args=(ctx,)).start()
-    await ctx.send(f"Moin Meister!")
-
-@bot.command(name="yo")
-async def say_yo(ctx):
-    await ctx.send(f"Yo! What's up?")
-    
-
-@bot.command(name="gp")
-async def get_price(ctx, coin_name: str = None):
-    if not coin_name:
-        await ctx.send("Please provide a cryptocurrency name. Usage: `!gp <coin_name>`")
-        return
-    
-    btc_price = get_crypto_price(coin_name=coin_name)
-    if btc_price:
-        await ctx.send(f"The current price of {coin_name} is ${btc_price}.")
-    else:
-        await ctx.send(f"Could not retrieve the price for {coin_name}.")
-
-
-
-@bot.command(name="gpp")
-async def get_price_periodically(ctx, coin_name: str = None):
-    global tasks
-    if not coin_name:
-        await ctx.send("Please provide a cryptocurrency name. Usage: `!gpp <coin_name>`")
-        return
-    
-    if coin_name in tasks:
-        ctx.send(f"There is already a task running for {coin_name}")
-        return
-    
-    tasks[coin_name] = bot.loop.create_task(get_crypto_price_periodically(ctx, coin_name))
-
-
-async def get_crypto_price_periodically(ctx, coin_name: str):
+# Load cogs dynamically
+@bot.command(name="load")
+#@commands.is_owner()
+async def load_cog(ctx, extension):
     try:
-        while True:
-            current_price = get_crypto_price(coin_name=coin_name)
-            await ctx.send(f"The current price of {coin_name} is ${current_price}.")
-            await asyncio.sleep(10)
-    except asyncio.CancelledError:
-        await ctx.send(f"Task for {coin_name} has been stopped due to problems.")
-        raise
-    finally:
-        tasks.pop(coin_name, None)
+        await bot.load_extension(f"cogs.{extension}")
+        await ctx.send(f"Loaded cog: {extension}")
+    except Exception as e:
+        await ctx.send(f"Failed to load cog {extension}: {e}")
 
 
-@bot.command(name="stop")
-async def stop_task(ctx, coin_name: str = None):
-    global tasks
-    if coin_name not in tasks:
-        await ctx.send("The periodic task is not running you idiot!")
-    else:
-        tasks[coin_name].cancel()
-        await ctx.send("Stopping the periodic task for {coin_name}.")
+@bot.command(name="unload")
+#@commands.is_owner()
+async def unload_cog(ctx, extension):
+    try:
+        await bot.unload_extension(f"cogs.{extension}")
+        await ctx.send(f"Unloaded cog: {extension}")
+    except Exception as e:
+        await ctx.send(f"Failed to unload cog {extension}: {e}")
 
-
-@bot.command(name="list")
-async def list_tasks(ctx):
-    """
-    Lists all currently running tasks.
-    Usage: !list
-    """
-    if not tasks:
-        await ctx.send("No tasks are currently running.")
-    else:
-        task_list = "\n".join(tasks.keys())
-        await ctx.send(f"Currently running tasks:\n{task_list}")
             
+# Automatically load cogs on startup
+if __name__ == "__main__":
+    import os
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            try:
+                bot.load_extension(f"cogs.{filename[:-3]}")
+                print(f"Loaded cog: {filename}")
+            except Exception as e:
+                    print(f"Failed to load cog {filename}: {e}")
 
 
 #client.run(TOKEN)
