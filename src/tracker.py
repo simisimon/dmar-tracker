@@ -2,6 +2,8 @@ import os
 import discord
 import requests
 import helperFunctions
+import threading
+import asyncio
 
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -18,6 +20,7 @@ bot_intents = discord.Intents.all()
 #bot_intents.messages = True
 
 bot = commands.Bot(command_prefix='!', intents=bot_intents)
+task_running = False
 
 #client = discord.Client(intents=intents)
 
@@ -63,7 +66,12 @@ async def on_ready():
 
 @bot.command(name="hi")
 async def say_hi(ctx):
+    threading.Thread(target=say_hi, args=(ctx,)).start()
     await ctx.send(f"Moin Meister!")
+
+@bot.command(name="yo")
+async def say_yo(ctx):
+    await ctx.send(f"Yo! What's up?")
     
 
 @bot.command(name="gp")
@@ -77,6 +85,46 @@ async def get_price(ctx, coin_name: str = None):
         await ctx.send(f"The current price of {coin_name} is ${btc_price}.")
     else:
         await ctx.send(f"Could not retrieve the price for {coin_name}.")
+
+
+@bot.command(name="gpp")
+async def get_price_periodically(ctx, coin_name: str = None):
+    global task_running
+    if not coin_name:
+        await ctx.send("Please provide a cryptocurrency name. Usage: `!gpp <coin_name>`")
+        return
+    
+    if not task_running:
+        task_running = True
+        bot.loop.create_task(get_crypto_price_periodically(ctx, coin_name))
+    else:
+        await ctx.send("Task is already running dude")
+
+
+async def get_crypto_price_periodically(ctx, coin_name: str):
+    global task_running
+
+    try:
+        while task_running:
+            current_price = get_crypto_price(coin_name=coin_name)
+            await ctx.send(f"The current price of {coin_name} is ${current_price}.")
+            await asyncio.sleep(10)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        task_running = False
+
+
+@bot.command(name="stop")
+async def stop_task(ctx):
+    global task_running
+    if task_running:
+        task_running = False
+        await ctx.send("Stopping the periodic task!")
+    else:
+        await ctx.send("The periodic task is not running you idiot!")
+            
+
 
 #client.run(TOKEN)
 bot.run(TOKEN)
