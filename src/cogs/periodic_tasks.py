@@ -2,12 +2,16 @@ import discord
 from discord.ext import commands
 import asyncio
 import requests
+from coinAlerts import CoinAlerts
 
 
 class PeriodicTasks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.tasks = {}  # Dictionary to track running tasks by name
+        self.tasks = {} # Dictionary to track running tasks by coin_name
+        self.coinAlertsPerUser = {}  # Dictionary to track set alerts for each user
+        #self.tasksPerUser = {}
+        #self.users = {}
 
     # simple "Hi" command, mostly used for debugging
     @commands.command(name="hi")
@@ -41,7 +45,10 @@ class PeriodicTasks(commands.Cog):
             ctx.send(f"There is already a task running for {coin_name}")
             return
         
+        # commented out line was used to allow more than one task per coin, but it doesnt make sense to have more than 1 task per coin for now
+        #self.tasks[f"{ctx.author.id}{coin_name}"] = self.bot.loop.create_task(self.get_crypto_price_periodically(ctx, coin_name))
         self.tasks[coin_name] = self.bot.loop.create_task(self.get_crypto_price_periodically(ctx, coin_name))
+
 
     # helper function used for the gpp command
     async def get_crypto_price_periodically(self, ctx, coin_name: str):
@@ -64,7 +71,7 @@ class PeriodicTasks(commands.Cog):
             await ctx.send("The periodic task is not running you idiot!")
         else:
             self.tasks[coin_name].cancel()
-            await ctx.send("Stopping the periodic task for {coin_name}.")
+            await ctx.send(f"Stopping the periodic task for {coin_name}.")
 
     # list command, used to list all cryptocurrencies for which automatic tasks are running
     # Usage: !list
@@ -76,8 +83,9 @@ class PeriodicTasks(commands.Cog):
             task_list = "\n".join(self.tasks.keys())
             await ctx.send(f"Currently running tasks:\n{task_list}")
 
-    # helper function used for the gp command
+    # helper function used to get the price
     def get_crypto_price(self, coin_name: str):
+        coin_name = coin_name.upper()
         url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin_name}USDT"
         print(url)
         response = requests.get(url).json()

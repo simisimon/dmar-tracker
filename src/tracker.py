@@ -21,7 +21,7 @@ bot_intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=bot_intents)
 
 # Track all tasks in a dictionary
-tasks = {}
+#tasks = {}
 
 #client = discord.Client(intents=intents)
 
@@ -76,6 +76,11 @@ async def load_cog(ctx, extension):
     except Exception as e:
         await ctx.send(f"Failed to load cog {extension}: {e}")
 
+# mention the user who wrote the message
+# only used for debugging purposes
+@bot.command("whoami")
+async def whoami(ctx):
+    await ctx.send(f"You are <@{ctx.author.id}>")
 
 @bot.command(name="unload")
 # commented out the check for the owner, since I am not the owner :sadge:
