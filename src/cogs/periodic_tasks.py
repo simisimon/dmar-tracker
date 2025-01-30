@@ -32,6 +32,24 @@ class PeriodicTasks(commands.Cog):
         else:
             await ctx.send(f"Could not retrieve the price for {coin_name}.")
 
+    # setalert command, used to set an setalert for a given cryprocurrency
+    # you need to provide the coin name, the price above which the setalert should trigger
+    # and the price below which the setalert should trigger
+    # Usage: !setalert <coin_name> <above> <below>
+    @commands.command(name="setalert")
+    async def set_alert(self, ctx, coin_name: str, above: float, below: float):
+        if not coin_name:
+            await ctx.send("Please provide a cryptocurrency name. Usage: `!setalert <coin_name> <above> <below>`")
+            return
+        
+        if coin_name not in self.tasks:
+            self.tasks[coin_name] = self.bot.loop.create_task(self.get_crypto_price_periodically(ctx, coin_name))
+
+        if ctx.author.id not in self.coinAlertsPerUser:
+            self.coinAlertsPerUser[ctx.author.id] = []
+
+        self.coinAlertsPerUser[ctx.author.id].append(CoinAlerts(coin_name, above, below))
+
 
     # gpp command, used to add an automatic task that fetches the price of the given cryptocurrency every 10 seconds
     # Usage: !gpp <name of the coin>
