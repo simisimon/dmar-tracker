@@ -71,6 +71,7 @@ class PeriodicTasks(commands.Cog):
 
         await ctx.send(f"Could not find any alerts for {coin_name}.")
 
+
     # listalerts command, used to list all alerts for a given user
     # Usage: !listalerts
     @commands.command(name="listalerts")
@@ -105,13 +106,26 @@ class PeriodicTasks(commands.Cog):
         try:
             while True:
                 current_price = self.get_crypto_price(coin_name=coin_name)
-                await ctx.send(f"The current price of {coin_name} is ${current_price}.")
+                #await ctx.send(f"The current price of {coin_name} is ${current_price}.")
+                await self.check_alerts(ctx, coin_name, current_price)
                 await asyncio.sleep(10)
         except asyncio.CancelledError:
             await ctx.send(f"Task for {coin_name} has been stopped due to problems.")
             raise
         finally:
             self.tasks.pop(coin_name, None)
+
+    # helper function to check if the price of a given coin has reached 
+    async def check_alerts(self, ctx, coin_name: str, current_price: float):
+        for user_id in self.coinAlertsPerUser:
+            for alert in self.coinAlertsPerUser[user_id]:
+                if alert.coin_name == coin_name:
+                    if current_price >= alert.above:
+                        user = await self.bot.fetch_user(user_id)
+                        await user.send(f"Price of {coin_name} has reached {current_price}.")
+                        #await ctx.send(f"<@{user_id}> Price of {coin_name} has reached {current_price}.")
+                    elif current_price <= alert.below:
+                        await ctx.send(f"<@{user_id}> Price of {coin_name} has reached {current_price}.")
 
     # stop command, used to stop the automatic task for a given cryptocurrency
     # Usage: !stop <name of the coin>
