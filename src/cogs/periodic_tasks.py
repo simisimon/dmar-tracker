@@ -32,12 +32,12 @@ class PeriodicTasks(commands.Cog):
         else:
             await ctx.send(f"Could not retrieve the price for {coin_name}.")
 
-    # setalert command, used to set an setalert for a given cryprocurrency
-    # you need to provide the coin name, the price above which the setalert should trigger
+    # setalert command, used to set an setalert for a given cryprocurrency.
+    # You need to provide the coin name, the price above which the setalert should trigger
     # and the price below which the setalert should trigger
     # Usage: !setalert <coin_name> <above> <below>
     @commands.command(name="setalert")
-    async def set_alert(self, ctx, coin_name: str, above: float, below: float):
+    async def set_alert(self, ctx, coin_name: str = None, above: float = None, below: float = None):
         if not coin_name:
             await ctx.send("Please provide a cryptocurrency name. Usage: `!setalert <coin_name> <above> <below>`")
             return
@@ -49,6 +49,38 @@ class PeriodicTasks(commands.Cog):
             self.coinAlertsPerUser[ctx.author.id] = []
 
         self.coinAlertsPerUser[ctx.author.id].append(CoinAlerts(coin_name, above, below))
+
+    # removealert command, used to remove an setalert for a given cryprocurrency.
+    # You need to provide the coin name.
+    # Usage: !removealert <coin_name>
+    @commands.command(name="removealert")
+    async def remove_alert(self, ctx, coin_name: str):
+        if not coin_name:
+            await ctx.send("Please provide a cryptocurrency name. Usage: `!removealert <coin_name>`")
+            return
+
+        if ctx.author.id not in self.coinAlertsPerUser:
+            await ctx.send("You have not set any alerts yet.")
+            return
+
+        for alert in self.coinAlertsPerUser[ctx.author.id]:
+            if alert.coin_name == coin_name:
+                self.coinAlertsPerUser[ctx.author.id].remove(alert)
+                await ctx.send(f"Alert for {coin_name} has been removed.")
+                return
+
+        await ctx.send(f"Could not find any alerts for {coin_name}.")
+
+    # listalerts command, used to list all alerts for a given user
+    # Usage: !listalerts
+    @commands.command(name="listalerts")
+    async def list_alerts(self, ctx):
+        if ctx.author.id not in self.coinAlertsPerUser:
+            await ctx.send("You have not set any alerts yet.")
+            return
+        
+        for alert in self.coinAlertsPerUser[ctx.author.id]:
+            await ctx.send(f"Alert for {alert.coin_name}: above {alert.above}, below {alert.below}")
 
 
     # gpp command, used to add an automatic task that fetches the price of the given cryptocurrency every 10 seconds

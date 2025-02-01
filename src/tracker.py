@@ -95,7 +95,6 @@ async def unload_cog(ctx, extension):
             
 # Automatically load cogs on startup
 if __name__ == "__main__":
-    import os
     for filename in os.listdir("./cogs"):
         if filename.endswith(".py"):
             try:
