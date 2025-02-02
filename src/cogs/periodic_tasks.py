@@ -150,7 +150,7 @@ class PeriodicTasks(commands.Cog):
     # helper function used to get the price
     def get_crypto_price(self, coin_name: str):
         coin_name = coin_name.upper()
-        url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin_name}USDT"
+        url = f"https://api-gcp.binance.com/api/v3/ticker/price?symbol={coin_name}USDT"
         print(url)
         response = requests.get(url).json()
         return float(response["price"])
