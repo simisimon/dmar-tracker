@@ -65,21 +65,23 @@ async def on_ready():
     await bot.load_extension('cogs.periodic_tasks')
     print("Manually loaded periodic_tasks cog")
 
-# Load cogs dynamically
 @bot.command(name="load")
 # commented out the check for the owner, since I am not the owner :sadge:
 #@commands.is_owner()
 async def load_cog(ctx, extension):
+    # Load cogs dynamically
     try:
         await bot.load_extension(f"cogs.{extension}")
         await ctx.send(f"Loaded cog: {extension}")
     except Exception as e:
         await ctx.send(f"Failed to load cog {extension}: {e}")
 
-# mention the user who wrote the message
-# only used for debugging purposes
 @bot.command("whoami")
 async def whoami(ctx):
+    """
+    mention the user who wrote the message
+    only used for debugging purposes
+    """
     await ctx.send(f"You are <@{ctx.author.id}>")
 
 @bot.command(name="unload")
