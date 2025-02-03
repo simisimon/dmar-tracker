@@ -37,7 +37,7 @@ class PeriodicTasks(commands.Cog):
     # and the price below which the setalert should trigger
     # Usage: !setalert <coin_name> <above> <below>
     @commands.command(name="setalert")
-    async def set_alert(self, ctx, coin_name: str = None, above: float = None, below: float = None):
+    async def set_alert(self, ctx, coin_name: str = None, above: float = 0.0, below: float = 0.0):
         if not coin_name:
             await ctx.send("Please provide a cryptocurrency name. Usage: `!setalert <coin_name> <above> <below>`")
             return
