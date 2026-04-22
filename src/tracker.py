@@ -1,15 +1,9 @@
 import os
 import discord
 from discord.ext import commands
-import requests
 
-from dotenv import load_dotenv
-from discord.ext import commands
-from cogs.periodic_tasks import PeriodicTasks
+from config import DISCORD_TOKEN
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 
 #intents = discord.Intents.default()
 #intents.typing = False
@@ -107,4 +101,4 @@ if __name__ == "__main__":
 
 
 #client.run(TOKEN)
-bot.run(TOKEN)
+bot.run(DISCORD_TOKEN)

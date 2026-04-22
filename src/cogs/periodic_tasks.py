@@ -3,6 +3,8 @@ from discord.ext import commands
 import asyncio
 import requests
 from coinAlerts import CoinAlerts
+from research.report import format_research_report
+from research.symbols import normalize_symbol
 
 
 class PeriodicTasks(commands.Cog):
@@ -35,6 +37,31 @@ class PeriodicTasks(commands.Cog):
         else:
             await ctx.send(f"Could not retrieve the price for {coin_name}.")
 
+    @commands.command(name="research")
+    async def research(self, ctx, raw_symbol: str = None):
+        """
+        research command, used to get a first research report for a stock or crypto symbol
+        Usage: !research <symbol>
+        """
+        if not raw_symbol:
+            await ctx.send("Please provide a symbol. Usage: `!research <symbol>`")
+            return
+
+        try:
+            symbol = normalize_symbol(raw_symbol)
+        except ValueError as error:
+            await ctx.send(str(error))
+            return
+
+        price = None
+        if symbol.asset_type == "crypto":
+            try:
+                price = self.get_crypto_price(coin_name=symbol.display_symbol)
+            except Exception:
+                await ctx.send(f"Could not retrieve crypto price data for {symbol.display_symbol}.")
+                return
+
+        await ctx.send(format_research_report(symbol, price=price))
 
     @commands.command(name="setalert")
     async def set_alert(self, ctx, coin_name: str = None, above: float = 0.0, below: float = 0.0):
