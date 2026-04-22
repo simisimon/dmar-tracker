@@ -10,7 +10,7 @@ The bot uses `!` as its command prefix.
 | --- | --- |
 | `!hi` | Sends a simple greeting for testing whether the bot is responding. |
 | `!gp <coin>` | Gets the current Binance USDT price for a coin, such as `!gp BTC`. |
-| `!research <symbol>` | Prints a first research report for a stock or crypto symbol, such as `!research BTC` or `!research AAPL`. |
+| `!research <symbol>` | Prints a first research report for a stock or crypto symbol, such as `!research BTC` or `!research AAPL`. Crypto uses Binance price data; stocks use `yfinance`. |
 | `!gpp <coin>` | Starts a periodic price check for a coin every 10 seconds. |
 | `!stop <coin>` | Stops the periodic price check for the selected coin. |
 | `!list` | Lists coins that currently have periodic price checks running. |

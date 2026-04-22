@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 import requests
 from coinAlerts import CoinAlerts
+from data_providers.stock_prices import get_stock_quote
 from research.report import format_research_report
 from research.symbols import normalize_symbol
 
@@ -54,14 +55,21 @@ class PeriodicTasks(commands.Cog):
             return
 
         price = None
+        quote = None
         if symbol.asset_type == "crypto":
             try:
                 price = self.get_crypto_price(coin_name=symbol.display_symbol)
             except Exception:
                 await ctx.send(f"Could not retrieve crypto price data for {symbol.display_symbol}.")
                 return
+        elif symbol.asset_type == "stock":
+            try:
+                quote = get_stock_quote(symbol.provider_symbol)
+            except Exception as error:
+                await ctx.send(f"Could not retrieve stock quote data for {symbol.display_symbol}: {error}")
+                return
 
-        await ctx.send(format_research_report(symbol, price=price))
+        await ctx.send(format_research_report(symbol, price=price, quote=quote))
 
     @commands.command(name="setalert")
     async def set_alert(self, ctx, coin_name: str = None, above: float = 0.0, below: float = 0.0):
